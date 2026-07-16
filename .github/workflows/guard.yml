@@ -49,7 +49,11 @@ jobs:
 
       - name: Scan for PII
         run: |
-          added=$(grep -E '^\+' /tmp/diff.txt | grep -v '^+++' || true)
+          # Strip the leading '+' diff marker before scanning. The email regex's
+          # local-part class includes '+', so an un-stripped '+@respx.mock'
+          # (a Python decorator on an added line) matches as a fake email
+          # '+@respx.mock' and false-fails every PR that adds a dotted decorator.
+          added=$(grep -E '^\+' /tmp/diff.txt | grep -v '^+++' | sed 's/^+//' || true)
           fail=0
 
           check() {
