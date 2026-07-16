@@ -1,0 +1,110 @@
+name: guard
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect the diff
+        run: |
+          # The guard's own files are excluded from the scan. They contain the
+          # fingerprint patterns as literal strings, so scanning them makes the
+          # guard fail on any PR that touches itself — including the PR that adds
+          # it. Verified: this exact bug shipped to hq-data's attribution.yml and
+          # turned its first run red.
+          git diff --unified=0 "origin/${{ github.base_ref }}...HEAD" -- . \
+            ':(exclude).github/workflows/guard.yml' \
+            ':(exclude).github/workflows/attribution.yml' \
+            ':(exclude)tests/test_guard_patterns.sh' \
+            > /tmp/diff.txt
+          wc -l /tmp/diff.txt
+
+      - name: Scan for AI attribution fingerprints
+        run: |
+          if grep -Eio 'co-authored-by:[[:space:]]*claude|generated with \[?claude|🤖 generated|claude\.ai/code|\.claude/(plugins|projects|jobs)/' /tmp/diff.txt; then
+            echo "::error::AI attribution fingerprint found in diff (see matches above)"
+            exit 1
+          fi
+          echo "no attribution fingerprints"
+
+      - name: Scan commit messages for AI attribution
+        run: |
+          if git log --format='%B' "origin/${{ github.base_ref }}..HEAD" \
+            | grep -Eio 'co-authored-by:[[:space:]]*claude|generated with \[?claude|🤖 generated'; then
+            echo "::error::AI attribution fingerprint in a commit message"
+            exit 1
+          fi
+          echo "no attribution fingerprints in commit messages"
+
+      - name: Scan for PII
+        run: |
+          added=$(grep -E '^\+' /tmp/diff.txt | grep -v '^+++' || true)
+          fail=0
+
+          check() {
+            if printf '%s' "$added" | grep -Eio "$1" | grep -vEi "$3"; then
+              echo "::error::$2"
+              fail=1
+            fi
+          }
+
+          check '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}' \
+                'email address in diff' \
+                'noreply@|example\.(com|org)|@v[0-9]'
+          check '\+886[0-9 -]{8,}|\b09[0-9]{2}-?[0-9]{3}-?[0-9]{3}\b' \
+                'phone number in diff' \
+                'zzzz_no_match_zzzz'
+          check '\b(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]{10,})\b' \
+                'credential-shaped string in diff' \
+                'zzzz_no_match_zzzz'
+          check '104\.com\.tw' \
+                'job-mail domain in public repo — this belongs to applied, not hq-os' \
+                'zzzz_no_match_zzzz'
+
+          exit $fail
+
+      - name: Scan for personal data that belongs in hq-data
+        run: |
+          if grep -E '^\+' /tmp/diff.txt | grep -v '^+++' \
+            | grep -Eio 'vincentiusshane|D1128429|fcu\.edu\.tw'; then
+            echo "::error::owner identity string in public repo — put it in hq-data/profile.md"
+            exit 1
+          fi
+          echo "no personal data"
+
+      - name: Scan commit author metadata
+        run: |
+          # A diff scan cannot see who authored a commit. Task 1 leaked a real
+          # email (D1128429@o365.fcu.edu.tw) into this public repo through author
+          # metadata, and every content-level check passed it because the leak
+          # was not in the tree. Author identity is a separate surface.
+          #
+          # Scan only the PR's own NON-merge commits. GitHub authors the synthetic
+          # pull_request merge ref itself (committer "GitHub <noreply@github.com>"),
+          # and squash-merge commits are likewise created server-side at merge time
+          # with the ACCOUNT's primary email — neither is controllable per-commit,
+          # and the squash commit lands after this check has already passed. The
+          # real guarantee against the squash leak is the account's email-privacy
+          # setting, not this workflow. This check is the belt for what we author.
+          bad=$(git log --no-merges --format='%an <%ae>%n%cn <%ce>' \
+              "origin/${{ github.base_ref }}..HEAD" \
+            | sort -u \
+            | grep -Ev '<[^>]*@users\.noreply\.github\.com>$|<noreply@github\.com>$' \
+            || true)
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            echo "::error::a PR commit author/committer is not a noreply address — this repo is public. Run: git config user.email '<id>+<login>@users.noreply.github.com' and rewrite the offending commits."
+            exit 1
+          fi
+          echo "all PR commit authors are noreply addresses"
