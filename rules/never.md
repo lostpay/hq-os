@@ -13,10 +13,6 @@
 - **Never gate a friction entry on corroboration.** `n=1` is information (no market), not a
   failure (the problem is still real). Annotate; do not block.
 - **Never score.** No 1–10, no weighted axes, no composite. Rank by argument.
-- **Never put PII in `hq-os`.** It is public. *(Belt-and-braces — `guard.yml` is the
-  actual guarantee.)*
-- **Never leave AI attribution in a commit or a file.** *(Belt-and-braces — `guard.yml`
-  again.)*
 - **Never append to a full list.** Ten slots. Entry is by displacement or not at all.
 - **Never read the inbox.** Gmail is send-only. `applied` owns job mail; the briefing never
   touches it.
