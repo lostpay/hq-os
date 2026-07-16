@@ -10,3 +10,5 @@ data by construction — see `CLAUDE.md` for the layer map.
 Every change to `main` here requires a pull request. That is enforced by a repository
 ruleset with no bypass actors, which is the mechanism behind the OS's propose → approve →
 apply loop: nothing changes the OS without a human merging it.
+
+Contact: someone@realdomain.com
