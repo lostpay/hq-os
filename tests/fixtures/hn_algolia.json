@@ -1,0 +1,20 @@
+{
+  "hits": [
+    {
+      "objectID": "40001",
+      "title": "I have to manually re-tag every release note",
+      "story_text": "Every time I cut a release I copy the changelog by hand into three places.",
+      "url": null,
+      "points": 12,
+      "created_at": "2026-07-15T09:00:00.000Z"
+    },
+    {
+      "objectID": "40002",
+      "title": "Is there a tool that diffs two OpenAPI specs semantically?",
+      "story_text": "",
+      "url": "https://example.com/post",
+      "points": 340,
+      "created_at": "2026-07-15T11:30:00.000Z"
+    }
+  ]
+}
