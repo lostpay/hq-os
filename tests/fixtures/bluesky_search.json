@@ -1,0 +1,15 @@
+{
+  "posts": [
+    {
+      "uri": "at://did:plc:abc/app.bsky.feed.post/xyz789",
+      "cid": "bafyxyz",
+      "author": {"handle": "someone.bsky.social", "did": "did:plc:abc"},
+      "record": {
+        "text": "I wish there was a way to diff two terraform plans without eyeballing 4000 lines.",
+        "createdAt": "2026-07-15T14:20:00.000Z"
+      },
+      "likeCount": 2,
+      "replyCount": 1
+    }
+  ]
+}
