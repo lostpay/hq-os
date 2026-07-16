@@ -112,3 +112,17 @@ def test_items_missing_from_the_reply_are_kept(monkeypatch):
     assert by_id["1"].keep is False
     assert by_id["2"].keep is True
     assert "not judged" in by_id["2"].why
+
+
+@respx.mock
+def test_verdict_missing_the_keep_field_does_not_crash_the_run(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "g")
+    # A free model returns valid JSON with a valid id but omits "keep". An
+    # unguarded v["keep"] would raise KeyError out of triage() and kill the run.
+    # The item must be kept (keep-on-doubt), not crash and not silently dropped.
+    respx.post(url__startswith="https://api.groq.com").mock(
+        return_value=httpx.Response(200, json=_reply([{"id": "1", "why": "no verdict field"}]))
+    )
+    verdicts, tier = triage([_item(1, "a")])
+    assert tier == "groq"
+    assert verdicts[0].keep is True

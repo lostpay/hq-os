@@ -142,7 +142,14 @@ def triage(items: list[Item]) -> tuple[list[Verdict], str]:
             if v is None:
                 verdicts.append(Verdict(item, True, "not judged by the model — kept"))
             else:
-                verdicts.append(Verdict(item, bool(v["keep"]), str(v.get("why", ""))))
+                # Both fields are .get with a default: a free model can return
+                # valid JSON that omits "keep", and an unguarded v["keep"] would
+                # raise KeyError straight out of triage() — breaking the one
+                # guarantee this whole ladder exists to give, that the run always
+                # completes. Missing "keep" defaults to keep, matching keep-on-doubt.
+                verdicts.append(
+                    Verdict(item, bool(v.get("keep", True)), str(v.get("why", "")))
+                )
         return verdicts, tier.name
 
     log.error("all triage tiers unavailable — degrading to regex + dedup only")
