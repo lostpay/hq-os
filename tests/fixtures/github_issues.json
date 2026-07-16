@@ -1,0 +1,14 @@
+{
+  "total_count": 1,
+  "items": [
+    {
+      "id": 998877,
+      "number": 412,
+      "title": "Support incremental re-index instead of full rebuild",
+      "body": "Right now I have to manually wipe the index every time a schema changes.",
+      "html_url": "https://github.com/example/repo/issues/412",
+      "created_at": "2026-07-14T10:00:00Z",
+      "reactions": {"total_count": 7}
+    }
+  ]
+}

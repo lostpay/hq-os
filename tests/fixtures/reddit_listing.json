@@ -1,0 +1,18 @@
+{
+  "data": {
+    "children": [
+      {
+        "data": {
+          "name": "t3_abc123",
+          "id": "abc123",
+          "title": "Every time I deploy I have to manually bump three version files",
+          "selftext": "The workaround is a shell script I keep re-copying between repos.",
+          "permalink": "/r/devops/comments/abc123/every_time_i_deploy/",
+          "score": 12,
+          "created_utc": 1784120400
+        }
+      }
+    ],
+    "after": null
+  }
+}
