@@ -3,7 +3,7 @@ news is not a stated problem."""
 
 from __future__ import annotations
 
-import time
+import calendar
 from datetime import datetime, timezone
 
 import feedparser
@@ -27,7 +27,10 @@ def _iso(entry) -> str:
     parsed = entry.get("published_parsed") or entry.get("updated_parsed")
     if not parsed:
         return datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return datetime.fromtimestamp(time.mktime(parsed), tz=timezone.utc).strftime(
+    # feedparser's *_parsed struct_time is already UTC. calendar.timegm reads it
+    # as UTC; time.mktime would read it as LOCAL time and be wrong by the host's
+    # offset everywhere except a UTC machine — silent, because CI runs in UTC.
+    return datetime.fromtimestamp(calendar.timegm(parsed), tz=timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
 

@@ -54,6 +54,10 @@ def test_rss_maps_entries_to_items():
     assert items[0].source == "rss"
     assert items[0].title == "Anthropic ships a new model"
     assert items[0].engagement == 0  # feeds carry no engagement signal
+    # The feed's pubDate is 08:00:00 GMT — created_utc must be exactly that,
+    # regardless of the host timezone. Asserting it catches the time.mktime
+    # (local-time) bug, which is invisible on a UTC CI runner.
+    assert items[0].created_utc == "2026-07-15T08:00:00Z"
 
 
 @respx.mock
