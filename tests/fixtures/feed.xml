@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Tech</title>
+    <item>
+      <title>Anthropic ships a new model</title>
+      <link>https://example.com/model</link>
+      <description>The release notes describe a longer context window.</description>
+      <pubDate>Wed, 15 Jul 2026 08:00:00 GMT</pubDate>
+      <guid>https://example.com/model</guid>
+    </item>
+  </channel>
+</rss>
