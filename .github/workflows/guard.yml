@@ -85,16 +85,26 @@ jobs:
 
       - name: Scan commit author metadata
         run: |
-          # A diff scan cannot see who authored a commit. Task 1 shipped a commit
-          # to this public repo authored by a university address (D1128429@o365.fcu.edu.tw)
-          # and every content-level check passed it, because the leak was in the
-          # metadata rather than the tree. Author identity is a separate surface
-          # and needs its own check.
-          bad=$(git log --format='%an <%ae>%n%cn <%ce>' "origin/${{ github.base_ref }}..HEAD" \
-            | sort -u | grep -Ev '@users\.noreply\.github\.com>$' || true)
+          # A diff scan cannot see who authored a commit. Task 1 leaked a real
+          # email (D1128429@o365.fcu.edu.tw) into this public repo through author
+          # metadata, and every content-level check passed it because the leak
+          # was not in the tree. Author identity is a separate surface.
+          #
+          # Scan only the PR's own NON-merge commits. GitHub authors the synthetic
+          # pull_request merge ref itself (committer "GitHub <noreply@github.com>"),
+          # and squash-merge commits are likewise created server-side at merge time
+          # with the ACCOUNT's primary email — neither is controllable per-commit,
+          # and the squash commit lands after this check has already passed. The
+          # real guarantee against the squash leak is the account's email-privacy
+          # setting, not this workflow. This check is the belt for what we author.
+          bad=$(git log --no-merges --format='%an <%ae>%n%cn <%ce>' \
+              "origin/${{ github.base_ref }}..HEAD" \
+            | sort -u \
+            | grep -Ev '<[^>]*@users\.noreply\.github\.com>$|<noreply@github\.com>$' \
+            || true)
           if [ -n "$bad" ]; then
             echo "$bad"
-            echo "::error::commit author/committer is not a GitHub noreply address — this repo is public. Set: git config user.email '<id>+<login>@users.noreply.github.com'"
+            echo "::error::a PR commit author/committer is not a noreply address — this repo is public. Run: git config user.email '<id>+<login>@users.noreply.github.com' and rewrite the offending commits."
             exit 1
           fi
-          echo "all commit authors are noreply addresses"
+          echo "all PR commit authors are noreply addresses"
