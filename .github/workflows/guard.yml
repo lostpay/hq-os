@@ -65,7 +65,7 @@ jobs:
 
           check '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}' \
                 'email address in diff' \
-                'noreply@|example\.(com|org)|@v[0-9]'
+                'noreply|example\.(com|org)|@v[0-9]'
           check '\+886[0-9 -]{8,}|\b09[0-9]{2}-?[0-9]{3}-?[0-9]{3}\b' \
                 'phone number in diff' \
                 'zzzz_no_match_zzzz'

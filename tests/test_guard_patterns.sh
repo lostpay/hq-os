@@ -4,7 +4,7 @@ set -u
 
 ATTRIB='co-authored-by:[[:space:]]*claude|generated with \[?claude|🤖 generated|claude\.ai/code|\.claude/(plugins|projects|jobs)/'
 EMAIL='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'
-EMAIL_OK='noreply@|example\.(com|org)|@v[0-9]'
+EMAIL_OK='noreply|example\.(com|org)|@v[0-9]'
 CRED='\b(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]{10,})\b'
 
 fails=0
@@ -33,5 +33,7 @@ printf '%s' 'me@personal.dev' | grep -Eio "$EMAIL" | grep -vEi "$EMAIL_OK" >/dev
   || { echo 'FAIL: expected to catch: real email'; fails=$((fails+1)); }
 printf '%s' 'uses: actions/checkout@v4' | grep -Eio "$EMAIL" | grep -vEi "$EMAIL_OK" >/dev/null \
   && { echo 'FAIL: false positive on: action pin'; fails=$((fails+1)); }
+printf '%s' 'hq-collect@users.noreply.github.com' | grep -Eio "$EMAIL" | grep -vEi "$EMAIL_OK" >/dev/null \
+  && { echo 'FAIL: false positive on: github noreply committer'; fails=$((fails+1)); }
 
 if [ "$fails" -eq 0 ]; then echo "all guard pattern tests passed"; else exit 1; fi
